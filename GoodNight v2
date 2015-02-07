@@ -69,7 +69,7 @@ def configureButton2() {
 def configureButton3() {
 	dynamicPage(name: "configureButton3", title: "Button 3",
 		nextPage: "configureButton4", uninstall: configured(), getButtonSections(3))
-        //install: true, uninstall: true, getButtonSections(3))
+        	//install: true, uninstall: true, getButtonSections(3))
 }
 def configureButton4() {
 	dynamicPage(name: "configureButton4", title: "Button 4",
