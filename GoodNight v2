@@ -128,7 +128,7 @@ def updated() {
 def initialize() {
 	subscribe(buttonDevice, "button", buttonEvent)
 	subscribe(master, "switch", switchHandler, [filterEvents: false])
-  subscribe(app, appTouch)
+	subscribe(app, appTouch)
 }
 
 def configured() {
@@ -182,7 +182,7 @@ def switchHandler(evt) {
 	if (evt.isPhysical()) {
 		if (evt.value == "off" && lastTwoStatesWere("off", recentStates, evt)) {
 			log.debug "detected two taps, turn off other light(s)"
-        shutDownHouse()
+        		shutDownHouse()
 		}
 	}
 	else {
@@ -309,7 +309,6 @@ private timeIntervalLabel() {
 private lastTwoStatesWere(value, states, evt) {
 	def result = false
 	if (states) {
-
 		log.trace "unfiltered: [${states.collect{it.dateCreated + ':' + it.value}.join(', ')}]"
 		def onOff = states.findAll { it.isPhysical() || !it.type }
 		log.trace "filtered:   [${onOff.collect{it.dateCreated + ':' + it.value}.join(', ')}]"
@@ -330,8 +329,8 @@ private shutDownHouse() {
 	switches.off()
 	checkLock()
 	checkDoor()
-  fan1.on()
-  fan1.setLevel(62)
+	fan1.on()
+	fan1.setLevel(62)
 }
 
 private checkLock() {   
