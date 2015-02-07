@@ -111,7 +111,7 @@ def button4Sections() {
 		input "door1", "capability.switch", title: "Which Switch?", required: false
         input "multisensor1", "capability.threeAxis", title: "Which Sensor?", required: false
 	}
-    section("And turn on this fan") {
+	section("And turn on this fan") {
 		input "fan1", "capability.switch", multiple: false, required: false
 	}
 }
