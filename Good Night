@@ -27,7 +27,7 @@ preferences {
 	section("When this switch is double-tapped...") {
 		input "master", "capability.switch", title: "Where?"
 	}
-    section("Or button 4 on these Minimotes are pushed...") {
+    	section("Or button 4 on these Minimotes are pushed...") {
 		input "buttonDevice", "capability.button", multiple: true
 	}
 	section("Turn off all of these switches") {
@@ -40,14 +40,14 @@ preferences {
 		input "door1", "capability.switch", title: "Which Switch?", required: false
         input "multisensor1", "capability.threeAxis", title: "Which Sensor?", required: false
 	}
-    section("And turn on this fan") {
+    	section("And turn on this fan") {
 		input "fan1", "capability.switch", multiple: false, required: false
 	}
 }
 
 def installed()
 {
-	subscribe(master, "switch", switchHandler, [filterEvents: false])
+    subscribe(master, "switch", switchHandler, [filterEvents: false])
     subscribe(buttonDevice, "button", buttonEvent)
     subscribe(app, appTouch)
 }
