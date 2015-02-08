@@ -38,7 +38,7 @@ preferences {
 }
 
 def selectButton() {
-	dynamicPage(name: "selectButton", title: "First, select your button device", nextPage: "configureButton1", uninstall: configured()) {
+	dynamicPage(name: "selectButton", title: "Select your button device(s)", nextPage: "configureButton1", uninstall: configured()) {
 		section {
 			input "buttonDevice", "capability.button", title: "Button", multiple: true, required: true
 		}
@@ -98,21 +98,23 @@ def getButtonSections(buttonNumber) {
 }
 
 def button4Sections() {
-	section("When this switch is double-tapped...") {
-		input "master", "capability.switch", title: "Where?"
-	}
-	section("Turn off all of these switches") {
-		input "switches", "capability.switch", multiple: true, required: false
-	}
-	section("And lock this door") {
-		input "lock1", "capability.lock", multiple: false, required: false
-	}
-	section("And close this door") {
-		input "door1", "capability.switch", title: "Which Switch?", required: false
-        input "multisensor1", "capability.threeAxis", title: "Which Sensor?", required: false
-	}
-	section("And turn on this fan") {
-		input "fan1", "capability.switch", multiple: false, required: false
+	return {
+		section("When this switch is double-tapped...") {
+			input "master", "capability.switch", title: "Where?"
+		}
+		section("Turn off all of these switches") {
+			input "switches", "capability.switch", multiple: true, required: false
+		}
+		section("And lock this door") {
+			input "lock1", "capability.lock", multiple: false, required: false
+		}
+		section("And close this door") {
+			input "door1", "capability.switch", title: "Which Switch?", required: false
+			input "multisensor1", "capability.threeAxis", title: "Which Sensor?", required: false
+		}
+		section("And turn on this fan") {
+			input "fan1", "capability.switch", multiple: false, required: false
+		}
 	}
 }
 
