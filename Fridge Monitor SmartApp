@@ -1,0 +1,133 @@
+/**
+ *  Fridge Monitor
+ *
+ *  Copyright 2015 Michael Ritchie
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ */
+definition(
+    name: "Fridge Monitor",
+    namespace: "mlritchie",
+    author: "Michael Ritchie",
+    description: "SmartApp that monitors an Arduino ThingShield with two temperature probes in a fridge and freezer.",
+    category: "Convenience",
+    iconUrl: "http://cdn.device-icons.smartthings.com/Appliances/appliances6-icn.png",
+    iconX2Url: "http://cdn.device-icons.smartthings.com/Appliances/appliances6-icn@2x.png",
+    iconX3Url: "http://cdn.device-icons.smartthings.com/Appliances/appliances6-icn@3x.png")
+
+
+preferences {
+	section("Choose which Temp Sensor is monitoring the fridge:") {
+    	input "temperatureSensor", "capability.temperatureMeasurement", multiple: false, required: true
+	}
+    section("When the Fridge exceeds this temperature:") {	
+		input "fridgeThreshold", "number", title: "Fridge Threshold:", required: true
+	}
+    section("Or when the Freezer exceeds this temperature:") {	
+		input "freezerThreshold", "number", title: "Freezer Threshold:", required: true
+	}
+    section("For this amount of time [default=5 minutes]:") {	
+		input "timeThreshold", "number", title: "Time in minutes", required: false
+	}
+    section("Notify me via:") {
+		input "sendPushMessage", "bool", title: "Send a push notification?", defaultValue: true
+		input "phoneNumber", "phone", title: "Send a text message?", required: false
+	}
+    section("If temp is still high, send me a reminder in [zero/no minutes = no reminder]:") {
+		input "reminderThreshold", "number", title: "Time in minutes", required: false
+	}
+    section("Notify me when temp is below threshold:") {
+		input "sendBackNormal", "bool", title: "Send notification when normal?", defaultValue: true
+	}
+}
+
+def installed() {
+	initialize()
+}
+
+def updated() {
+	unsubscribe()
+	initialize()
+}
+
+def initialize() {
+    subscribe(temperatureSensor, "fridgeTemp", temperatureHandler)
+    subscribe(temperatureSensor, "freezerTemp", temperatureHandler)
+    
+    // Declare/Clear variables to capture timestamps
+    state.fridgeTempWarm = ""
+    state.fridgeTempReminder = ""
+    state.freezerTempWarm = ""
+    state.freezerTempReminder = ""
+}
+
+def temperatureHandler(evt) {
+   	int tooWarm
+    def deviceName = evt.name
+    if (deviceName == "fridgeTemp") {
+    	tooWarm = fridgeThreshold
+    } else {
+    	tooWarm = freezerThreshold
+    }
+    
+    if (evt.integerValue >= tooWarm) {
+		//Check how long the temperature sensor has been reporting a high temp
+        if (state."${deviceName}Warm" == "") {
+            state."${deviceName}Warm" = now()
+            log.debug "Previous warm temps for ${deviceName} have not been detected, storing timestamp to compare: ${evt.integerValue} >= ${tooWarm}"
+        } else {
+            def tempWaitMinutes = timeThreshold ?: 5 // By default, the delay is 5 minutes
+            def tempTimeAgo = new Date(now() - (1000 * 60 * tempWaitMinutes).toLong())
+            def deviceWarmAt = new Date(state."${deviceName}Warm")
+            if (tempTimeAgo > deviceWarmAt) {
+                if (state."${deviceName}Reminder" == "") {
+                    log.debug "Sending first message that ${deviceName} is too warm: ${evt.integerValue} >= ${tooWarm}"
+                    state."${deviceName}Reminder" = now()
+                    send("${deviceName} is too warm, reporting a temperature of ${evt.integerValue} ${evt.unit}")
+                } else if (reminderThreshold) {
+                    def notifWaitMinutes = reminderThreshold
+                    def notifTimeAgo = new Date(now() - (1000 * 60 * notifWaitMinutes).toLong())
+                    def notifSentAt = new Date(state."${deviceName}Reminder")
+                    if (notifTimeAgo > notifSentAt) {
+                        log.debug "Sending another message that ${deviceName} is too warm: ${evt.integerValue} >= ${tooWarm}"
+                        state."${deviceName}Reminder" = now()
+                        send("${deviceName} is still warm after ${reminderThreshold} minutes, reporting a temperature of ${evt.integerValue} ${evt.unit}")
+                    }
+                }
+            }
+        }
+	} else if (state."${deviceName}Warm" != "") {
+        if (sendBackNormal && state."${deviceName}Reminder" != "") {
+            log.debug "Sending notification ${deviceName} is below threshold: ${evt.integerValue} < ${tooWarm}"
+            send("${deviceName} is now below threshold, reporting a temperature of ${evt.integerValue} ${evt.unit}")
+        }
+        state."${deviceName}Warm" = ""
+        state."${deviceName}Reminder" = ""
+        log.debug "Clearing variables, ${deviceName} is below threshold: ${evt.integerValue} < ${tooWarm}"
+    }
+}
+
+private send(msg) {
+    if (location.contactBookEnabled) {
+        log.debug("sending notifications to: ${recipients?.size()} msg: ${msg}")
+        sendNotificationToContacts(msg, recipients)
+    }
+    else {
+        if (sendPushMessage) {
+            log.debug("sending push message, msg: ${msg}")
+            sendPush(msg)
+        }
+        if (phoneNumber) {
+            log.debug("sending text message to ${phoneNumber}, msg: ${msg}")
+            sendSms(phoneNumber, msg)
+        }
+    }
+}
