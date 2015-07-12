@@ -1,0 +1,102 @@
+#include <SoftwareSerial.h>     // Arduino UNO/Leonardo uses SoftwareSerial for the SmartThings Library
+#include <SmartThings.h>        // Library to provide API to the SmartThings Shield
+#include <Math.h>               // Library used to round temperature to nearest whole number
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define PIN_THING_RX  3         // Reserved Thing Shield Pin
+#define PIN_THING_TX  2         // Reserved Thing Shield Pin
+#define ONE_WIRE_BUS  10        // Digital Pin temperature probes are hooked up to
+
+int delayMS = 3000;             // Time between temperature reads in milliseconds
+int freezerPrev;
+int fridgePrev;
+bool isDebugEnabled = false;    // Set this to true if you wish to have messages in Arduino Serial Monitor
+
+SmartThingsCallout_t messageCallout;    // call out function forward decalaration
+SmartThings smartthing(PIN_THING_RX, PIN_THING_TX, messageCallout);  // constructor
+
+//Temperature chip i/o
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+// Assign the addresses of your 1-Wire temp sensors.
+// See the tutorial on how to obtain these addresses:
+// http://www.hacktronics.com/Tutorials/arduino-1-wire-address-finder.html
+
+DeviceAddress freezerProbe = { 0x28, 0xFF, 0x17, 0x99, 0x01, 0x15, 0x02, 0x13 };
+DeviceAddress fridgeProbe = { 0x28, 0xFF, 0xD3, 0x6D, 0x01, 0x15, 0x02, 0x51 };
+
+void setup(void) {
+  if (isDebugEnabled) {
+    Serial.begin(9600);
+  }
+  // Start up the library
+  sensors.begin();
+  // set the resolution to 10 bit (good enough?)
+  sensors.setResolution(freezerProbe, 10);
+  sensors.setResolution(fridgeProbe, 10);
+}
+
+void loop(void) {
+  smartthing.run();
+  sensors.requestTemperatures();
+  int freezerTemp = getTemp(freezerProbe);
+  if (freezerTemp != freezerPrev) {
+    freezerPrev = freezerTemp;
+    //Send temp to SmartThings in Censius.  It will translate temp based on account preference.
+    smartthing.send("freezerTemp " + String(freezerTemp));
+    if (isDebugEnabled) {
+      Serial.print("Updated ST freezerTemp: ");
+      Serial.println(freezerTemp);
+    }
+  }
+  
+  int fridgeTemp = getTemp(fridgeProbe);
+  if (fridgeTemp != fridgePrev) {
+    fridgePrev = fridgeTemp;
+    //Send temp to SmartThings in Censius.  It will translate temp based on account preference.
+    smartthing.send("fridgeTemp " + String(fridgeTemp));
+    if (isDebugEnabled) {
+      Serial.print("Updated ST fridgeTemp: ");
+      Serial.println(fridgeTemp);
+    }
+  }
+  if (isDebugEnabled) {
+    Serial.print("Freezer: ");
+    Serial.print(freezerTemp);
+    Serial.print("C/");
+    int freezerTempF = round(DallasTemperature::toFahrenheit(freezerTemp));
+    Serial.print(freezerTempF);
+    Serial.print("F, Fridge: ");
+    Serial.print(fridgeTemp);
+    Serial.print("C/");
+    int fridgeTempF = round(DallasTemperature::toFahrenheit(fridgeTemp));
+    Serial.print(fridgeTempF);
+    Serial.println("F");
+  }
+  
+  delay(delayMS);
+}
+
+int getTemp(DeviceAddress deviceAddress){
+  // returns the temperature from one DS18S20 in DEG Celsius
+  float tempC = sensors.getTempC(deviceAddress);
+  // rounding temperature to slow down updates
+  int tempRounded = round(tempC);
+  return tempRounded;
+}
+
+//*****************************************************************************
+void messageCallout(String message) {
+  // This function isn't needed for this project, though you could have Arduino perform an action based on action from SmartThings
+  // if debug is enabled print out the received message
+  /*if (isDebugEnabled)
+  {
+    Serial.print("Received message: '");
+    Serial.print(message);
+    Serial.println("' ");
+  }*/
+}
