@@ -14,7 +14,7 @@
  *
  */
 metadata {
-	definition (name: "arduinoTempSensor", namespace: "", author: "Michael Ritchie") {
+    definition (name: "arduinoTempSensor", namespace: "mlritchie", author: "Michael Ritchie") {
 		capability "Sensor"
 		capability "Temperature Measurement"
         
