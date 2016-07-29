@@ -1,5 +1,5 @@
 /**
- *  House Status
+ *  Location Status
  *
  *  Copyright 2015 Michael Ritchie
  *
@@ -14,7 +14,7 @@
  *
  */
 definition(
-    name: "House Status-manual",
+    name: "Location Status",
     namespace: "mlritchie",
     author: "Michael Ritchie",
     description: "Manage virtual switch if designated lights are on, locks are unlocked, and doors open",
