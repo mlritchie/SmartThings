@@ -1,0 +1,292 @@
+/**
+ *  	Denon Network Receiver 
+ *    	Based on Denon/Marantz receiver by Kristopher Kubicki
+ *    	SmartThings driver to connect your Denon Network Receiver to SmartThings
+ *		Tested with Denon AVR-X4200W
+
+http://192.168.1.X/goform/formMainZone_MainZoneXmlStatus.xml
+http://192.168.1.X/goform/formZone2_Zone2XmlStatus.xml
+http://192.168.1.X/goform/formMainZone_MainZoneXml.xml
+*/
+
+metadata {
+	definition (name: "Denon AVR Zone 2", namespace: "mlritchie", author: "Michael Ritchie") {
+		capability "Actuator"
+		capability "Switch"
+		capability "Switch Level"
+		capability "Music Player"
+        capability "Refresh"
+        
+        attribute "input", "string" 
+		
+        command "generateEvent"
+        command "on"
+        command "off"
+		command "mute"
+		command "unmute"
+		command "cblsat"
+		command "dvd"
+		command "blueray"
+		command "game"
+		command "aux1"
+		command "aux2"
+		command "mediaplayer"
+		command "ipodusb"
+		command "cd"
+		command "tuner"
+		command "network"
+		command "tvaudio"
+		command "bluetooth"
+		command "phono"
+	}
+	
+	
+	simulator {
+		// TODO-: define status and reply messages here
+	}
+	
+	tiles(scale: 2) {
+        multiAttributeTile(name: "multiAVR", type:"mediaPlayer", width:6, height:4) {
+            tileAttribute("device.status", key: "PRIMARY_CONTROL") {
+                attributeState("paused", label:"Off",)
+                attributeState("playing", label:"Playing")
+            }
+            tileAttribute("device.status", key: "MEDIA_STATUS") {
+                attributeState "playing", label: '${name}', action:"switch.off", backgroundColor:"#00a0dc"
+                attributeState "paused", label: '${name}', action:"switch.on", backgroundColor:"#ffffff"
+            }
+            tileAttribute ("device.level", key: "SLIDER_CONTROL") {
+                attributeState("level", action:"setLevel")
+            }
+            tileAttribute ("device.mute", key: "MEDIA_MUTED") {
+                attributeState("unmuted", action:"mute", nextState: "muted")
+                attributeState("muted", action:"unmute", nextState: "unmuted")
+            }
+            tileAttribute("device.trackDescription", key: "MARQUEE") {
+                attributeState("trackDescription", label:"${currentValue}", defaultState: true)
+                //attributeState("trackDescription", label:"Testing", defaultState: true)
+            }
+        }
+
+        standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: false) {
+            state "on", label: '${name}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#53a7c0"
+			state "off", label: '${name}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff"
+		}
+        standardTile("blank", "device.blank", width: 2, height: 2, decoration: "flat") {
+			state "blank", label: "", backgroundColor: "#FFFFFF"
+		}
+        standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action: "refresh.refresh", icon: "st.secondary.refresh"
+		}
+		standardTile("cblsat", "device.cblsat", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Tivo', action: "cblsat", icon:"st.Electronics.electronics3", backgroundColor: "#FFFFFF", nextState:"on"
+			state "on", label: 'Tivo', action: "cblsat", icon:"st.Electronics.electronics3" , backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("dvd", "device.dvd", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'DVD', action: "dvd", icon:"st.Electronics.electronics1", backgroundColor:"#FFFFFF",nextState:"on"
+			state "on", label: 'DVD', action: "dvd", icon:"st.Electronics.electronics1", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("bluray", "device.bluray", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Fire TV', action: "blueray", icon:"st.Entertainment.entertainment1", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Fire TV', action: "blueray", icon:"st.Entertainment.entertainment1", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("game", "device.game", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Game', action: "game", icon:"st.Entertainment.entertainment12", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Game', action: "game", icon:"st.Entertainment.entertainment12", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("aux1", "device.aux1", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Aux1', action: "aux1", icon:"st.Electronics.electronics6", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Aux1', action: "aux1", icon:"st.Electronics.electronics6", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("aux2", "device.aux2", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Aux2', action: "aux2", icon:"st.Entertainment.entertainment9", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Aux2', action: "aux2", icon:"st.Entertainment.entertainment9", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("mediaplayer", "device.mediaplayer", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Apple TV', action: "mediaplayer", icon:"st.Electronics.electronics8", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Apple TV', action: "mediaplayer", icon:"st.Electronics.electronics8", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("ipodusb", "device.ipodusb", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'iPod/USB', action: "ipodusb", icon:"st.Entertainment.entertainment4", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'iPod/USB', action: "ipodusb", icon:"st.Entertainment.entertainment4", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("cd", "device.cd", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Echo Dot', action: "cd", icon:"st.Electronics.electronics14", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Echo Dot', action: "cd", icon:"st.Electronics.electronics14", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("tuner", "device.tuner", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Tuner', action: "tuner", icon:"st.Electronics.electronics10", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Tuner', action: "tuner", icon:"st.Electronics.electronics10", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("network", "device.network", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Online Music', action: "network", icon:"st.Entertainment.entertainment2", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Online Music', action: "network", icon:"st.Entertainment.entertainment2", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("tvaudio", "device.tvaudio", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'TV Audio', action: "tvaudio", icon:"st.Electronics.electronics3", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'TV Audio', action: "tvaudio", icon:"st.Electronics.electronics3", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("bluetooth", "device.bluetooth", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Bluetooth', action: "bluetooth", icon:"st.Entertainment.entertainment15", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Bluetooth', action: "bluetooth", icon:"st.Entertainment.entertainment15", backgroundColor: "#53a7c0", nextState:"off"
+		}
+        standardTile("phono", "device.phono", width: 2, height: 2, decoration: "flat"){
+			state "hidden", label:'', icon:"", backgroundColor:"#ffffff", defaultState: true
+            state "off", label: 'Phono', action: "phono", icon:"st.Electronics.electronics4", backgroundColor: "#FFFFFF",nextState:"on"
+			state "on", label: 'Phono', action: "phono", icon:"st.Electronics.electronics4", backgroundColor: "#53a7c0", nextState:"off"
+		}
+		standardTile("sound", "device.sound", width: 4, height: 2, decoration: "flat"){
+			state "sMusic", label: '${currentValue}', action:"sMusic", icon:"st.Entertainment.entertainment3", backgroundColor: "#FFFFFF", nextState:"sMovie"
+			state "sMovie", label: '${currentValue}', action:"sMovie", icon:"st.Entertainment.entertainment9", backgroundColor: "#FFFFFF", nextState:"sGame"
+			state "sGame", label: '${currentValue}', action:"sGame", icon:"st.Electronics.electronics6", backgroundColor: "#FFFFFF", nextState:"sPure"
+			state "sPure", label: '${currentValue}', action:"sPure", icon:"st.Entertainment.entertainment15", backgroundColor: "#FFFFFF", nextState:"sMusic"
+		}
+		main "multiAVR"
+		details(["multiAVR", "switch", "blank", "poll", "dvd", "bluray", "aux1", "mediaplayer", "ipodusb", "cd", "tuner", "network", "tvaudio", "bluetooth", "phono", "cblsat", "game", "aux2"])
+	}
+}
+
+//TILE ACTIONS
+def setLevel(val) {
+    sendEvent(name: "mute", value: "unmuted")     
+    sendEvent(name: "level", value: val)
+    def int scaledVal = val - 80
+    def cmd = "cmd0=PutMasterVolumeSet%2F" + scaledVal + "&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def on() {
+    sendEvent(name: "status", value: "playing")
+    sendEvent(name: "switch", value: "on")
+    def cmd = "cmd0=PutZone_OnOff%2FON&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def off() { 
+    sendEvent(name: "status", value: "paused")
+    sendEvent(name: "switch", value: "off")
+    def cmd = "cmd0=PutZone_OnOff%2FOFF&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def mute() { 
+    sendEvent(name: "mute", value: "muted")
+    def cmd = "cmd0=PutVolumeMute%2FON&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def unmute() { 
+    sendEvent(name: "mute", value: "unmuted")
+    def cmd = "cmd0=PutVolumeMute%2FOFF&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def toggleMute(){
+    if (device.currentValue("mute") == "muted") {
+    	unmute()
+    } else {
+    	mute()
+    }
+}
+def cblsat() {
+    updateInputs("cblsat")
+    def cmd = "SAT/CBL&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def dvd() {
+    updateInputs("dvd")
+    def cmd = "DVD&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def blueray() {
+    updateInputs("bluray")
+    def cmd = "BD&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def game() {
+    updateInputs("game")
+    def cmd = "GAME&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def aux1() {
+    updateInputs("aux1")
+    def cmd = "AUX1&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def aux2() {
+    updateInputs("aux2")
+    def cmd = "AUX2&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def mediaplayer() {
+    updateInputs("mediaplayer")
+    def cmd = "MPLAY&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def ipodusb() {
+    updateInputs("ipodusb")
+    def cmd = "USB/IPOD&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def cd() {
+    updateInputs("cd")
+    def cmd = "CD&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def tuner() {
+    updateInputs("tuner")
+    def cmd = "TUNER&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def network() {
+    updateInputs("network")
+    def cmd = "NET&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def tvaudio() {
+    updateInputs("tvaudio")
+    def cmd = "TV&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def bluetooth() {
+    updateInputs("bluetooth")
+    def cmd = "BT&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+def phono() {
+    updateInputs("phono")
+    def cmd = "PHONO&ZoneName=ZONE2"
+    parent.request(cmd)
+}
+
+
+//Other functions
+def refresh() {
+    //log.debug "asking parent for refresh"
+    parent.refresh("zone2")
+}
+def generateEvent(Map results) {
+    results.each { name, value ->
+        //log.debug "generateEvent ${name}: ${value}"
+        sendEvent(name: name, value: value)
+    }
+    return null
+}
+def updateInputs(currentInput) {
+	def result = []
+    result << sendEvent(name: "${currentInput}", value: "on")
+    def previousInput = device.currentValue("input")
+    result << sendEvent(name: "${previousInput}", value: "off")
+    result << sendEvent(name: "input", value: currentInput)
+    result << sendEvent(name: "trackDescription", value: currentInput)
+    
+    return result
+}
